@@ -120,23 +120,16 @@ override_utf8_locale no
 use_spacer none
 
 TEXT
-W| Down: $color${downspeed wlo1} k/s ${alignr}Up: ${upspeed wlo1} k/s
-${downspeedgraph wlo1 25,140 000000 ff0000} ${alignr}${upspeedgraph wlo1
-25,140 000000 00ff00}$color
-Total: ${totaldown wlo1} ${alignr}Total: ${totalup wlo1}
-E| Down: $color${downspeed ens18} k/s ${alignr}Up: ${upspeed ens18} k/s
-${downspeedgraph ens18 25,140 000000 ff0000} ${alignr}${upspeedgraph ens18
-25,140 000000 00ff00}$color
-Total: ${totaldown ens18} ${alignr}Total: ${totalup ens18}
-Inbound: ${tcp_portmon 1 32767 count} Outbound: ${tcp_portmon 32768
-61000 count}${alignr}Total: ${tcp_portmon 1 65535 count}
+w/rx/${downspeed wlp4s0}${goto 140}w/tx/${upspeed wlp4s0}${goto 280}e/rx/${downspeed enp0s31f6}${goto 420}e/tx/${upspeed enp0s31f6}${alignr}ic/${tcp_portmon 1 32767 count}
+w/rx/t/${totaldown wlp4s0}${goto 140}w/tx/t/${totalup wlp4s0}${goto 280}e/rx/t/${totaldown enp0s31f6}${goto 420}e/tx/t/${totalup enp0s31f6}${alignr}oc/${tcp_portmon 32768 61000 count}
+${downspeedgraph wlp4s0 25,120 000000 ff0000}${goto 140}${upspeedgraph wlp4s0 25,120 000000 00ff00}${goto 280}${downspeedgraph enp0s31f6 25,120 000000 ff0000}${goto 420}${upspeedgraph enp0s31f6 25,120 000000 00ff00}
 $color$hr
-${exec php net.php route}
+${exec php ~/conky/net.php route}
 $color$hr
-${exec php net.php page_ports4}
+${exec php ~/conky/net.php page_ports4}
 $color$hr
-${exec php net.php page_ports6}
+${exec php ~/conky/net.php page_ports6}
 $color$hr
-${exec php net.php connections_filter}
+${exec php ~/conky/net.php connections_filter}
 $color$hr
 
