@@ -1,8 +1,8 @@
 require 'cairo'
 
 function iarray(iter)
-	o = {}
-	c = 1
+	local o = {}
+	local c = 1
 	for f in iter do
 		o[c] = f
 		c = c + 1
@@ -21,7 +21,7 @@ function xprint(cr,text,xpos,ypos)
 	cairo_set_font_size (cr, font_size)
 	cairo_set_source_rgba (cr,red,green,blue,alpha)
 	
-	offset = 0
+	local offset = 0
 	for line in string.gmatch(text, "[^\n]+") do
 		cairo_move_to (cr,xpos,ypos+offset)
 		cairo_show_text (cr,line)
@@ -47,7 +47,7 @@ end
 function xtable(cr,t,xpos,ypos)
 	--otable(t)
 	
-	extent = {}
+	local extent = {}
 	extent.x = xpos
 	extent.y = ypos
 	extent.width = 0
@@ -63,13 +63,13 @@ function xtable(cr,t,xpos,ypos)
 	cairo_set_font_size (cr, font_size)
 	cairo_set_source_rgba (cr,red,green,blue,alpha)
 	
-	offset = font_size
+	local offset = font_size
 	
 
 	cairo_move_to (cr,xpos,ypos+offset)
 	for k,v in pairs(t.columns) do
 		if t.format[v].show == true then
-			z = v..string.rep(" ", (t.format[v].width - #v)).."  "
+			local z = v..string.rep(" ", (t.format[v].width - #v)).."  "
 			cairo_show_text (cr,z)
 		end
 	end
@@ -80,9 +80,9 @@ function xtable(cr,t,xpos,ypos)
 		cairo_move_to (cr,xpos,ypos+offset)
 		for k,v in pairs(t.columns) do
 			if t.format[v].show == true then
-				z = t.rows[i][v]..string.rep(" ", (t.format[v].width - #t.rows[i][v])).."  "
+				local z = t.rows[i][v]..string.rep(" ", (t.format[v].width - #t.rows[i][v])).."  "
 				cairo_show_text (cr,z)
-				ex = cairo_text_extents_t:create()
+				local ex = cairo_text_extents_t:create()
 				cairo_text_extents(cr,z,ex)
 				--if ex.width > extent.width then extent.width = ex.width end
 				--if ex.height > extent.height then extent.height = ex.height end
@@ -133,7 +133,7 @@ end
 --end
 
 function mtable(s)
-	t = {}
+	local t = {}
 	t.rows = {}
 	t.columns = {}
 	t.format = {}
@@ -151,8 +151,8 @@ function mtable(s)
 end
 
 function p_route()
-	rs = cmdo("sudo route -n")
-	t = mtable("destination,gateway,mask,flags,mss,window,irtt,interface")
+	local rs = cmdo("sudo route -n")
+	local t = mtable("destination,gateway,mask,flags,mss,window,irtt,interface")
 	
 	for l,line in pairs(iarray(string.gmatch(rs, "[^\n]+"))) do
 		row = {}
@@ -174,8 +174,8 @@ function p_route()
 end
 
 function p_connections()
-	rs = cmdo("sudo netstat -tupn")
-	t = mtable("proto,recv,send,local,remote,state,pid")
+	local rs = cmdo("sudo netstat -tupn")
+	local t = mtable("proto,recv,send,local,remote,state,pid")
 	
 	for l,line in pairs(iarray(string.gmatch(rs, "[^\n]+"))) do
 		row = {}
@@ -189,6 +189,7 @@ function p_connections()
 		if row["proto"] == "Active" then t.rows[l] = nil end
 		if row["proto"] == "Proto" then t.rows[l] = nil end
 		if row["pid"] ~= nil and string.find(row["pid"],"chrome") then t.rows[l] = nil end
+		if row["pid"] == "-" then t.rows[l] = nil end
 	end
 	
 	t.format["recv"].show = false
@@ -198,9 +199,9 @@ function p_connections()
 	return t
 end
 
-function p_ports(proto)
-	rs = cmdo("sudo netstat -tulpn")
-	t = mtable("proto,recv,send,local,remote,pid")
+function p_ports(rs,proto)
+	-- local rs = cmdo("sudo netstat -tulpn")
+	local t = mtable("proto,recv,send,local,remote,pid")
 	
 	for l,line in pairs(iarray(string.gmatch(rs, "[^\n]+"))) do
 		row = {}
@@ -215,8 +216,8 @@ function p_ports(proto)
 		t.rows[l] = row;
 		if row["proto"] == "Active" then t.rows[l] = nil end
 		if row["proto"] == "Proto" then t.rows[l] = nil end
-		if row["pid"] ~= nil and string.find(row["pid"],"chrome") then t.rows[l] = nil end
-		if row["pid"] == "-" then t.rows[l] = nil end
+		--if row["pid"] ~= nil and string.find(row["pid"],"chrome") then t.rows[l] = nil end
+		--if row["pid"] == "-" then t.rows[l] = nil end
 
 		if row["proto"] ~= proto then t.rows[l] = nil end
 
@@ -237,48 +238,60 @@ function conky_main()
 	if conky_window == nil then
 		return
 	end
-	local cs = cairo_xlib_surface_create(conky_window.display,
-		                         conky_window.drawable,
-		                         conky_window.visual,
-		                         conky_window.width,
-		                         conky_window.height)
-	cr = cairo_create(cs)
-	local updates=tonumber(conky_parse('${updates}'))
-	--if updates>5 then
-		--xprint("hello world")
-	--end
-	--xprint(cmdo("sudo netstat -tulpn"),100,900)
-	--xprint(cmdo("sudo route -n"),0,700)
-	leftx = 5
+
+	--if tonumber(conky_parse('${updates}')) > tonumber(conky_parse('${update_interval}')) then
+	if tonumber(conky_parse('${updates}')) > 5 then
+		local cs = cairo_xlib_surface_create(
+			conky_window.display,
+			conky_window.drawable,
+			conky_window.visual,
+			conky_window.width,
+			conky_window.height
+		)
+
+		local cr = cairo_create(cs)
+
+		local leftx = 5
+
+		local le,leB,mleY,prs
+
+		
 
 
-	--xdivider(cr,0,le.y+le.height+5,conky_window.width,le.y+le.height+5)
+		--xdivider(cr,0,le.y+le.height+5,conky_window.width,le.y+le.height+5)
 
-	le = xtable(cr,p_route(),leftx,100)
-	--print(le.x,le.y,le.width,le.height)
+		le = xtable(cr,p_route(),leftx,100)
+		--print(le.x,le.y,le.width,le.height)
 
-	xdivider(cr,0,le.y+le.height+5,conky_window.width,le.y+le.height+5)
+		xdivider(cr,0,le.y+le.height+5,conky_window.width,le.y+le.height+5)
 
-	le = xtable(cr,p_connections(),leftx,le.y+le.height+10)
+		le = xtable(cr,p_connections(),leftx,le.y+le.height+10)
 
 
-	xdivider(cr,0,le.y+le.height+5,conky_window.width,le.y+le.height+5)
+		xdivider(cr,0,le.y+le.height+5,conky_window.width,le.y+le.height+5)
 
-	le = xtable(cr,p_ports("tcp"),leftx,le.y+le.height+10)
-	leB = xtable(cr,p_ports("udp"),le.x+le.width+10,le.y)
+		prs = cmdo("sudo netstat -tulpn")
 
-	mleY = math.max((le.y+le.height),(leB.y+leB.height))
-	xdivider(cr,0,mleY+5,conky_window.width,mleY+5)
+		le = xtable(cr,p_ports(prs,"tcp"),leftx,le.y+le.height+10)
+		leB = xtable(cr,p_ports(prs,"udp"),le.x+le.width+10,le.y)
 
-	le = xtable(cr,p_ports("tcp6"),leftx,mleY+10)
-	leB = xtable(cr,p_ports("udp6"),leB.x,le.y)
+		mleY = math.max((le.y+le.height),(leB.y+leB.height))
+		xdivider(cr,0,mleY+5,conky_window.width,mleY+5)
 
-	mleY = math.max((le.y+le.height),(leB.y+leB.height))
-	--xdivider(cr,0,mleY+5,conky_window.width,mleY+5)
+		le = xtable(cr,p_ports(prs,"tcp6"),leftx,mleY+10)
+		leB = xtable(cr,p_ports(prs,"udp6"),leB.x,le.y)
 
-	cairo_destroy(cr)
-	cairo_surface_destroy(cs)
-	cr=nil
+		mleY = math.max((le.y+le.height),(leB.y+leB.height))
+		xdivider(cr,0,mleY+5,conky_window.width,mleY+5)
+
+		xprint(cr,(os.date("%Y-%m-%d %H:%M:%S")),le.x,mleY+20)
+
+
+		cairo_destroy(cr)
+		cairo_surface_destroy(cs)
+		cr=nil
+	end
+
 end
 
 

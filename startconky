@@ -1,6 +1,8 @@
 #!/bin/bash
 killall -s 9 conky
 
-conky -d -c $HOME/conky/cpu
-conky -d -c $HOME/conky/network
+WKDIR=$HOME/conky
+
+conky -d -c $WKDIR/cpu
+conky -d -c $WKDIR/network
 
